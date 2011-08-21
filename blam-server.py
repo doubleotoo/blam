@@ -49,7 +49,8 @@ class CountHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         data = []
-        for x in lists.find(): data.append([x["name"],lists.find({"name":x['name']}).count()])
+        for x in lists.find():
+            data.append([x['name'],len(x['keys'])])
         self.finish(json.dumps({"data":data}))
         
 
