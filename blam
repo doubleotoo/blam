@@ -1,0 +1,255 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# 2011 Hunter Lang -- it actually feels bad associating my name with such crappy code.
+# is that a sign?
+import os
+import optparse
+import sys
+from termcolor import colored
+import httplib
+import json
+import urllib2
+import webbrowser
+import select
+import re
+
+api_root = None
+copy_command = "pbcopy"
+home = os.getenv("USERPROFILE") or os.getenv("HOME")
+config_options = {}
+stored_json = {}
+
+
+def first_time():
+    message = """Hey! Welcome to blam!\nType blam <list> to get started or blam help for more details!"""
+    print message
+    sys.exit()
+def help():
+    print "----------------------------------------------------------------------\n"
+    print "blam.......................................................show lists"
+    print "blam help................................................display help"
+    print "blam all.............................show all lists, keys, and values"
+    print "blam <list>......................create a new list/show list's values"
+    print "blam <key>..............................copy key's value to clipboard"
+    print "blam <list> <key>.......................copy key's value to clipboard"
+    print "blam <list <key> <value>...............set <key> in <list> to <value>"
+    print "blam <list> delete......................................delete <list>"
+    print "blam <list> <key> delete.....................delete <key> from <list>"
+    print "blam open <list>..............open <list>'s values in default browser"
+    print "blam open <list> <key>..................open value in default browser"
+    print "blam open <key>.........................................same as above"
+    print "cat file.txt | blam <list> <key>....uses file.txt's contents as value"
+    print "\n----------------------------------------------------------------------"
+def open_links():
+    parse_config()
+    pattern = re.compile(r"""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))""")
+    
+    if len(sys.argv) == 3:
+        #open is the first arg, so if the second is a list, open it.
+        if sys.argv[2] in stored_json.keys():
+            for item in stored_json['' + sys.argv[2]]:
+                search = pattern.search(item.items()[0][1])
+                if search:
+                    for group in search.groups():
+                        if group:
+                            webbrowser.open_new_tab(group)
+                else:
+                    print colored(item.items()[0][1], 'yellow'), "is not a url."
+            print colored("Blam!", "cyan"), "Just opened all of", colored(sys.argv[2], 'yellow'), "for you."
+        else:
+            # the list doesnt exist, so it must be a key.
+            for list in stored_json.keys():
+                for item in stored_json['' + list]:
+                    if item.items()[0][0] == sys.argv[2]:
+                        search = pattern.search(item.items()[0][1])
+                        if search:
+                            for group in search.groups():
+                                if group:
+                                    webbrowser.open_new_tab(group)
+            print colored("Blam!", "cyan"), "Just opened", colored(sys.argv[2], 'yellow'), "for you."
+    return
+def handle_piped_input():
+    pipe_input = sys.stdin.read()
+    sys.argv.append(pipe_input)
+def delete():
+    parse_config()
+    if len(sys.argv) == 4:
+        if sys.argv[1] in stored_json.keys():
+            if sys.argv[2] in [x.keys()[0] for x in stored_json['' + sys.argv[1]]]:
+                for x in stored_json['' + sys.argv[1]]:
+                    if x.keys()[0] == sys.argv[2]:
+                        stored_json['' + sys.argv[1]].remove(x)
+                        print colored("Blam!", 'cyan'), colored(x.keys()[0], 'yellow'), "has been destroyed."
+    elif len(sys.argv) == 3:
+        x = raw_input("You sure you want to delete all of your " + colored(sys.argv[1], 'yellow') + "? (y/n):")
+        if x == "y":
+            if sys.argv[1] in stored_json.keys():
+                stored_json.pop(sys.argv[1])
+                save()
+                print colored("Blam!", 'cyan') + " Deleted all your " + colored(sys.argv[1], 'yellow') + "."
+    save()
+    return
+
+def list_all():
+    parse_config()
+    for list in stored_json.keys():
+        print "  " + list
+        longest = 0
+        keys = []
+        for item in stored_json['' + list]:
+            if len(item.keys()[0]) > longest: longest = len(item.keys()[0])
+            keys.append([item.keys()[0], item['' + item.keys()[0]]])
+        for key in keys:
+            print "    " +  key[0] + ":" + "  " + "".join([" " for x in xrange(longest - len(key[0]))]) + key[1]
+    return
+
+def new_list(title):
+    stored_json[''+title] = []
+    print colored("Blam!", "cyan"), "Created a new list called", colored(title, 'yellow') + "."
+
+def save():
+    open(home + "/.blam", 'w').write(json.dumps({"options": config_options, "lists":stored_json}))
+
+def api_post(url, send_data):
+    h = httplib.HTTPConnection(api_root)
+    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}    
+    h.request('POST', url, json.dumps(send_data), headers)
+    r = h.getresponse()
+    return r.read()
+
+def api_get(url):
+    return urllib2.urlopen(api_root + url).read()
+
+def parse_config():
+    if sys.platform == "darwin": copy_command = "pbcopy"
+    else: copy_command = "xsel -c"
+    try: x = open(home + '/.blam', 'r')
+    except IOError:
+        x = open(home + '/.blam', 'w')
+        x.write(json.dumps({"options":{}, "lists":{}}))
+        first_time()
+    split = x.read()
+    options = json.loads(split)["options"]
+    
+    for key in options.keys():
+        config_options['' + key] = options[key]
+    json_load = json.loads(split)['lists']
+    for key in json_load.keys():
+        stored_json['' + key] = json_load[key]
+
+def update_server(self):
+    username = config_options["username"]
+    password = config_options["password"]
+    url = config_options["update_server"]
+    
+    data = {
+        "JSON":stored_json,
+        "username":username,
+        "password":password
+    }
+    api_post("/", data)
+
+def main():
+    if len(sys.argv) == 1:
+        # print lists and their lengths
+        for list in stored_json.keys():
+            print list + " (" + str(len(stored_json['' + list])) + ")"
+
+    elif len(sys.argv) == 2:
+        # blam <list>
+        # A new list could be created here, 
+        # or it could be a copy request. 
+        # if arg is not a list and there is no key matching it, create a new list.
+        # if arg is not a list and there is a key matching it, ignore the list creation and copy the value.
+        # if arg is a list and there is a key matching it, list all keys in the list.
+        # if arg is a list and there are no keys matching it, list all keys in the list.
+        copy_value = None
+        # if both exist
+        # if the list exists and th key doesnt
+        if sys.argv[1] in stored_json.keys():
+            longest = 0
+            keylist = []
+            for item in stored_json['' + sys.argv[1]]:
+                items = item.items()
+                if len(items[0][0]) > longest: longest = len(items[0][0])
+                keylist.append([items[0][0], items[0][1]])
+            for key in keylist:
+                print "    " + key[0] + ":" + "  " + "".join([" " for x in xrange(longest - len(key[0]))]) + key[1]
+            sys.exit()
+        for list in stored_json:
+            for item in stored_json['' + list]:
+                item = item.items()
+                if item[0][0] == sys.argv[1]:
+                    copy_value = item[0][1]
+        try: 
+            os.popen("printf \"" + copy_value + "\" | " + copy_command)
+            print colored("Blam!", "cyan"), "We just copied", colored(copy_value, 'yellow'), "to your clipboard."
+        except TypeError: a = 1
+        # creates a new list
+        if not copy_value:
+            new_list(sys.argv[1])
+
+    elif len(sys.argv) == 3:
+        # blam <list> <key>
+        # if list exists and key doesnt, print key not found in list.
+        # if key exists and list doesn't, create a new list and ignore the key.
+        # if both exist, copy the value for the key.
+        if sys.argv[1] in stored_json.keys():
+            copy_value = None
+            # list exists.
+            list = stored_json['' + sys.argv[1]]
+            for x in list:
+                for y in x.items():
+                    if sys.argv[2] == y[0]:
+                        copy_value = y[1]
+                        print colored("Blam!", 'cyan'), "We just copied", colored(copy_value, 'yellow'), "to your clipboard."
+                        break
+            if copy_value:
+                os.popen("printf \"" + copy_value + "\" | " + copy_command)
+            else: print colored("Blam!", 'cyan'), colored(sys.argv[2], 'yellow'), colored('not found in', 'red'), colored(sys.argv[1], 'yellow')
+            
+        else:
+            # list doesnt exit
+            new_list(sys.argv[1]) 
+
+    elif len(sys.argv) == 4:
+        list = sys.argv[1]
+        key = sys.argv[2]
+        value = sys.argv[3]
+        try: 
+            # if the list already exists
+            list_keys = [x.keys()[0] for x in stored_json['' + list]]
+            if key in list_keys:
+                for x in stored_json['' + list]:
+                    if x.keys()[0] == key:
+                        stored_json['' + list].remove({'' + x.keys()[0]: x['' + x.keys()[0]]})
+                        stored_json['' + list].append({'' + key: value})
+                print colored("Blam!", 'cyan'), "Sweet. " + colored(key,'yellow') + ' in ' + colored(list, 'yellow') + ' is ' + colored(value, 'yellow') + "."
+            else:
+                stored_json['' + list].append({"" + key: value})
+                print colored("Blam!", 'cyan'), "Sweet. " + colored(key,'yellow') + ' in ' + colored(list, 'yellow') + ' is ' + colored(value, 'yellow') + "."
+        except KeyError:
+            # if the list doesn't exist, make a new one. and then try again.
+            new_list(list)
+            stored_json['' + list].append({"" + key: value})
+            print colored("Blam!", 'cyan'), "Sweet.", colored(key,'yellow'), "in", colored(list, 'yellow'), "is", colored(value, 'yellow') + "."
+    save()
+
+if __name__ == "__main__":
+    if select.select([sys.stdin,],[],[],0.0)[0] and len(sys.argv) == 3:
+        handle_piped_input()
+    if len(sys.argv) > 1:
+        if sys.argv[1].lower() == "open":
+            open_links()
+            sys.exit()
+        elif sys.argv[1].lower() == 'all':
+            list_all()
+            sys.exit()
+        elif sys.argv[1].lower() == 'help':
+            help()
+            sys.exit()
+        elif sys.argv[-1].lower() == "delete":
+            delete()
+            sys.exit()
+    parse_config()
+    main()
