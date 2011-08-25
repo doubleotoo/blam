@@ -118,7 +118,6 @@ def delete():
         if x == "y":
             if sys.argv[1] in stored_json.keys():
                 stored_json.pop(sys.argv[1])
-                save()
                 print colored("Blam!", 'cyan') + " Deleted all your " + colored(sys.argv[1], 'yellow') + "."
     save()
     return
