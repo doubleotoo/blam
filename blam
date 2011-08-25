@@ -3,7 +3,7 @@
 # 2011 Hunter Lang -- it actually feels bad associating my name with such crappy code.
 # is that a sign?
 import os
-import optparse
+import time
 import sys
 from termcolor import colored
 import httplib
@@ -182,11 +182,10 @@ def main():
                 if item[0][0] == sys.argv[1]:
                     copy_value = item[0][1]
         try: 
-            os.popen("printf \"" + copy_value + "\" | " + copy_command)
+            os.popen("printf \"" + copy_value.replace('"', r'\"') + "\" | " + copy_command)
             print colored("Blam!", "cyan"), "We just copied", colored(copy_value, 'yellow'), "to your clipboard."
-        except TypeError: a = 1
-        # creates a new list
-        if not copy_value:
+        except AttributeError:
+            # creates a new list
             new_list(sys.argv[1])
 
     elif len(sys.argv) == 3:
@@ -205,7 +204,7 @@ def main():
                         print colored("Blam!", 'cyan'), "We just copied", colored(copy_value, 'yellow'), "to your clipboard."
                         break
             if copy_value:
-                os.popen("printf \"" + copy_value + "\" | " + copy_command)
+                os.popen("printf \"" + copy_value.replace('"', r'\"') + "\" | " + copy_command)
             else: print colored("Blam!", 'cyan'), colored(sys.argv[2], 'yellow'), colored('not found in', 'red'), colored(sys.argv[1], 'yellow')
             
         else:
