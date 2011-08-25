@@ -20,26 +20,58 @@ config_options = {}
 stored_json = {}
 
 
+def echo():
+    parse_config()
+    if len(sys.argv) == 4:
+        list = stored_json['' + sys.argv[2]]
+        found = False
+        for key in list:
+            if key.keys()[0] == sys.argv[3]:
+                found = True
+                print key[key.keys()[0]]
+                break
+        if found == False:
+            print colored(sys.argv[3], 'yellow'), colored('not found in', 'red'), colored(sys.argv[2], 'yellow')
+        
+    elif len(sys.argv) == 3:
+        # used elif bc it might be 5
+        # just a list or a key
+        # only look for key, ignore if it is only a list
+        key = sys.argv[2]
+        found = False
+        for list in stored_json.keys():
+            if key in [x.keys()[0] for x in stored_json['' + list]]:
+                found = True
+                print [x['' + x.keys()[0]] for x in stored_json['' + list] if x.keys()[0] == key]
+        if found == False:
+            print colored(key, 'yellow'), colored('not found', 'red')
 def first_time():
     message = """Hey! Welcome to blam!\nType blam <list> to get started or blam help for more details!"""
     print message
     sys.exit()
 def help():
-    print "----------------------------------------------------------------------\n"
-    print "blam.......................................................show lists"
-    print "blam help................................................display help"
-    print "blam all.............................show all lists, keys, and values"
-    print "blam <list>......................create a new list/show list's values"
-    print "blam <key>..............................copy key's value to clipboard"
-    print "blam <list> <key>.......................copy key's value to clipboard"
-    print "blam <list <key> <value>...............set <key> in <list> to <value>"
-    print "blam <list> delete......................................delete <list>"
-    print "blam <list> <key> delete.....................delete <key> from <list>"
-    print "blam open <list>..............open <list>'s values in default browser"
-    print "blam open <list> <key>..................open value in default browser"
-    print "blam open <key>.........................................same as above"
-    print "cat file.txt | blam <list> <key>....uses file.txt's contents as value"
-    print "\n----------------------------------------------------------------------"
+    print "--------------------------------------------------------------------------------\n"
+    print "blam..................................show lists"
+    print "blam help.............................display help"
+    print "blam all..............................show everything\n"
+    
+    print "blam <list>...........................create a new list/show list's values"
+    print "blam <list> <key>.....................copy key's value to clipboard"
+    print "blam <list <key> <value>..............set <key> in <list> to <value>"
+    print "blam <key>............................copy key's value to clipboard\n"
+    
+    print "blam <list> delete....................delete <list>"
+    print "blam <list> <key> delete..............delete <key> from <list>\n"
+
+    print "blam open <list>......................open <list>'s values in default browser"
+    print "blam open <list> <key>................open value in default browser"
+    print "blam open <key>.......................same as above"
+    print "blam echo <key>.......................print <keys>'s value without copying"
+    print "blam echo <list> <key>................print <keys>'s value without copying"    
+
+    print "cat file.txt | blam <list> <key>.............use file.txt's contents as value\n"
+    print "email", colored("hunterlang@comcast.net", 'cyan'), "with any additional questions."
+    print "\n------------------------------------------------------------------------------"
 def open_links():
     parse_config()
     pattern = re.compile(r"""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))""")
@@ -240,6 +272,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == "open":
             open_links()
+            sys.exit()
+        elif sys.argv[1].lower() == 'echo':
+            echo()
             sys.exit()
         elif sys.argv[1].lower() == 'all':
             list_all()
