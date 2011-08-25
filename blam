@@ -46,6 +46,7 @@ def echo():
         if found == False:
             print colored(key, 'yellow'), colored('not found', 'red')
 def first_time():
+    # if its the users first time
     message = """Hey! Welcome to blam!\nType blam <list> to get started or blam help for more details!"""
     print message
     sys.exit()
