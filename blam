@@ -42,6 +42,7 @@ def echo():
         for list in stored_json.keys():
             if key in [x.keys()[0] for x in stored_json['' + list]]:
                 found = True
+                # gotta love list comprehensions
                 print [x['' + x.keys()[0]] for x in stored_json['' + list] if x.keys()[0] == key][0]
         if found == False:
             print colored(key, 'yellow'), colored('not found', 'red')
