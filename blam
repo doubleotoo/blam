@@ -42,7 +42,6 @@ def echo():
         for list in stored_json.keys():
             if key in [x.keys()[0] for x in stored_json['' + list]]:
                 found = True
-                # gotta love list comprehensions
                 print [x['' + x.keys()[0]] for x in stored_json['' + list] if x.keys()[0] == key][0]
         if found == False:
             print colored(key, 'yellow'), colored('not found', 'red')
@@ -71,7 +70,7 @@ def help():
     print "blam echo <key>.......................print <keys>'s value without copying"
     print "blam echo <list> <key>................print <keys>'s value without copying"    
 
-    print "cat file.txt | blam <list> <key>.............use file.txt's contents as value\n"
+    print "cat file.txt | blam <list> <key>......use file.txt's contents as value\n"
     print "email", colored("hunterlang@comcast.net", 'cyan'), "with any additional questions."
     print "\n------------------------------------------------------------------------------"
 def open_links():
@@ -90,17 +89,43 @@ def open_links():
                 else:
                     print colored(item.items()[0][1], 'yellow'), "is not a url."
             print colored("Blam!", "cyan"), "Just opened all of", colored(sys.argv[2], 'yellow'), "for you."
+
         else:
             # the list doesnt exist, so it must be a key.
+            found = False
             for list in stored_json.keys():
                 for item in stored_json['' + list]:
                     if item.items()[0][0] == sys.argv[2]:
+                        found = True
                         search = pattern.search(item.items()[0][1])
                         if search:
                             for group in search.groups():
                                 if group:
                                     webbrowser.open_new_tab(group)
-            print colored("Blam!", "cyan"), "Just opened", colored(sys.argv[2], 'yellow'), "for you."
+                                    print colored("Blam!", "cyan"), "Just opened", colored(sys.argv[2], 'yellow'), "for you."
+
+            if found == False:
+                print colored(sys.argv[2], 'yellow'), colored('not found anywhere', 'red') + "."
+                
+    elif len(sys.argv) == 4:
+        list = stored_json['' + sys.argv[2]]
+        the_key = sys.argv[3]
+        found = False
+        for key in list:
+            if key.keys()[0] == the_key:
+                found = True
+                value = key['' + key.keys()[0]]
+                search = pattern.search(value)
+                if search:
+                    for group in search.groups():
+                        if group:
+                            webbrowser.open_new_tab(group)
+                            print colored("Blam!", "cyan"), "Just opened", colored(key.keys()[0], 'yellow'), "for you."
+                            break
+                else:
+                    print colored(value, 'yellow'), 'is not a valid url.'
+        if found == False:
+            print colored(the_key, 'yellow'), colored('not found in', 'red'), colored(sys.argv[2], 'yellow') + "."
     return
 def handle_piped_input():
     pipe_input = sys.stdin.read()
