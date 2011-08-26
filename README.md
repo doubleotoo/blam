@@ -29,6 +29,8 @@ There is semi-intentionally no Windows support.
 
 # Usage
 Usage is nearly identical to that of [Boom](http://github.com/holman/boom). You can type
-       blam help
+     
+     blam help
+
 for more details, or you can refer to [Boom's usage wiki](https://github.com/holman/boom/wiki/Commands), of course changing all of the boom's to blam's.
 [Email me](mailto:hunterlang@comcast.net) with any additional questions regarding features or usage.
