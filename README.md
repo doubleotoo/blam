@@ -13,24 +13,35 @@ To install, download the tarball however you wish (No, I dont have it all in a f
                                                                                                                                                                                                         
 For autocompletion support, assuming you use bash, put the contents of completion.bash in your .bashrc or .bash_profile files, depending which system you're on.                                        
                                                                                                                                                                                                         
-Also, make sure you have termcolor installed. If you dont,                                                                                                                                              
+Also, make sure you have termcolor & clint installed. If you dont,                                                                                                                                              
                                                                                                                                                                                                         
-      pip install termcolor                                                                                                                                                                             
-                                                                                                                                                                                                        
+      pip install termcolor
+      pip install clint
+      
 Blam will create a config file at ~/.blam. Inside is the JSON data that holds all of your blam stuff. Feel free to edit this manually.                                                                  
 Copying to clipboard with blam only works if                                                                                                                                                            
                                                                                                                                                                                                         
-        printf something | xsel -c                                                                                                                                                                      
+        printf something | xsel -c
+        
 copies "something" to your clipboard on Linux, or if you're on OS X,                                                                                                                                    
                                                                                                                                                                                                         
-       printf something | pbcopy                                                                                                                                                                        
+       printf something | pbcopy
+       
 You can always tailor the copy command to your setup, provided you're not opposed to changing a few lines in the script.
 There is semi-intentionally no Windows support.
 
 # Usage
+## Command Line
 Usage is nearly identical to that of [Boom](http://github.com/holman/boom). You can type
      
      blam help
-
+     
 for more details, or you can refer to [Boom's usage wiki](https://github.com/holman/boom/wiki/Commands), of course changing all of the boom's to blam's.
 [Email me](mailto:hunterlang@comcast.net) with any additional questions regarding features or usage.
+
+## Dedicated Shell
+Blam also includes a shell. In the shell/ directory, execute ./shell to enter the shell. 
+The shell relies on blam being in your $PATH, and being named "blam". For instance, blam is located in /usr/bin/blam on my machine.
+The shell will also work if put in your $PATH. Personally, I prefer the shell to the command line interface. However, it currently lacks some of the more advanced features, like piping input to blam.
+
+                                                                                                                                                                                                        
