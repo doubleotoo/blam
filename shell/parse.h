@@ -23,14 +23,3 @@ typedef struct {
 parse_info *parse(char *);
 void free_info(parse_info *);
 void print_info(parse_info *);
-
-
-
-
-
-
-
-
-
-
-
