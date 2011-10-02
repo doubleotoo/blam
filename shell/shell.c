@@ -44,8 +44,6 @@ int main (int argc, char **argv)
 	  }
 #endif
 
-	  //insert your code about history and !x !-x here
-	  
 	  info = parse(cmd_line);
 	  if (info == NULL) {
 		free(cmd_line);
@@ -53,7 +51,7 @@ int main (int argc, char **argv)
 	  }
 	  print_info(info);
 
-	  //info of command before |
+	  // info of command before |
 	  com=&info->com_array[0];
 	  if ((com == NULL)  || (com->command == NULL)) {
 		FILE *fp;
@@ -67,7 +65,7 @@ int main (int argc, char **argv)
 		free(cmd_line);
 		continue;
 	  }
-	  //com->command tells the command name of com
+	  // command name of com
 	  if (is_builtin_command(com->command) == EXIT) {
 		exit(1);
 	  }
@@ -146,5 +144,5 @@ int main (int argc, char **argv)
 	  }
 	  free_info(info);
 	  free(cmd_line);
-	}/* while(1) */
+	}
 }
