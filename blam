@@ -6,6 +6,7 @@ import os
 import time
 import sys
 from termcolor import colored
+import clint
 import httplib
 import json
 import urllib2
@@ -263,11 +264,11 @@ def main():
             # if the list doesn't exist, make a new one. and then try again.
             new_list(list)
             stored_json['' + list].append({"" + key: value})
-            print colored("Blam!", 'cyan'), "Sweet.", colored(key,'yellow'), "in", colored(list, 'yellow'), "is", colored(value, 'yellow') + "."
+            print(colored("Blam!", "cyan") + "Sweet.", colored(key, "yellow") + "in", colored(list, 'yellow'), "is", colored(value, 'yellow') + ".")
     save()
 
 if __name__ == "__main__":
-    if select.select([sys.stdin,],[],[],0.0)[0] and len(sys.argv) == 3:
+    if clint.piped_in():
         handle_piped_input()
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == "open":
