@@ -97,10 +97,7 @@ int main (int argc, char **argv)
 		}
 	  }
 	  else if (is_builtin_command(com->command) == DEL) {
-		if (com->var_list[1]) {
-		  printf("List deletion is not yet supported. Sorry.\n");
-		}
-		else if (com->var_list[2]) {
+		if (com->var_list[2]) {
 		  FILE *fp;
 		  char line[130];
 		  char command[60] = "blam ";
@@ -114,6 +111,19 @@ int main (int argc, char **argv)
 		  }
 		  pclose(fp);
 		}
+		else if (com->var_list[1]) {
+		  FILE *fp;
+		  char line[130];
+		  char command[60] = "blam ";
+		  strncat(command, com->var_list[1], strlen(com->var_list[1]));
+		  strncat(command, " delete", 7);
+		  fp = popen(command, "r");
+		  while (fgets(line, sizeof line, fp)) {
+			printf("%s", line);
+		  }
+		  pclose(fp);
+		}
+
 
 	  }
 	  else {
